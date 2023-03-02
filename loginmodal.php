@@ -11,10 +11,8 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Application\CMSApplicationInterface;
 use Joomla\CMS\Factory;
-use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Plugin\CMSPlugin;
 
 class plgSystemLoginModal extends CMSPlugin {
@@ -31,19 +29,22 @@ class plgSystemLoginModal extends CMSPlugin {
 	 * setup the scripts.
 	 */
 	function onAfterDispatch() {
-		if ($this->app->isClient('site'))
-		{
-			$selector	=	$this->params->get('selector', 'a[href*="login"], a[href*="logout"]');
-			$script	= <<<SCRIPT
-			document.addEventListener("DOMContentLoaded", function() {
-			var login = document.querySelectorAll('$selector').forEach((login, index) => {login.setAttribute('data-bs-toggle', 'modal');login.setAttribute('data-bs-target', '#loginModal');});
-			});
-			SCRIPT;
-			/** @var Joomla\CMS\WebAsset\WebAssetManager $wa */
-			$wa = Factory::getDocument()->getWebAssetManager();
+		$modules = ModuleHelper::getModules('modal');
 
-			$wa->useScript('bootstrap.modal')
-				->addInlineScript($script);
+		if ($this->app->isClient('site') && $modules) {
+			{
+				$selector = $this->params->get('selector', 'a[href*="login"], a[href*="logout"]');
+				$script	= <<<SCRIPT
+				document.addEventListener("DOMContentLoaded", function() {
+				var login = document.querySelectorAll('$selector').forEach((login, index) => {login.setAttribute('data-bs-toggle', 'modal');login.setAttribute('data-bs-target', '#loginModal');});
+				});
+				SCRIPT;
+				/** @var Joomla\CMS\WebAsset\WebAssetManager $wa */
+				$wa = Factory::getDocument()->getWebAssetManager();
+
+				$wa->useScript('bootstrap.modal')
+					->addInlineScript($script);
+			}
 		}
 	}
 	/**
@@ -51,8 +52,8 @@ class plgSystemLoginModal extends CMSPlugin {
 	 */
 	function onAfterDisplay() {
 		$modules = ModuleHelper::getModules('modal');
-		foreach ($modules as $module) {
-			?>
+
+		if ($modules) { ?>
 			<div
 				class="modal fade"
 				id="loginModal"
@@ -60,7 +61,7 @@ class plgSystemLoginModal extends CMSPlugin {
 				aria-labelledby="loginModalLabel"
 				aria-hidden="true"
 			>
-				<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-dialog modal-xl modal-dialog-centered">
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title" id="loginModalLabel">
@@ -74,15 +75,14 @@ class plgSystemLoginModal extends CMSPlugin {
 							></button>
 						</div>
 						<div class="modal-body">
+							<?php foreach ($modules as $module) : ?>
 							<?php echo ModuleHelper::renderModule($module); ?>
+							<?php endforeach; ?>
 						</div>
 					</div>
 				</div>
 			</div>
-			<?php
+		<?php
 		}
 	}
 }
-
-
-
